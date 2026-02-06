@@ -1,4 +1,4 @@
-# Geographic Variation in GLP-1 Receptor Agonist Prescribing
+# Characterizing Geographic Variation in GLP-1 Receptor Agonist Prescribing Using Interpretable Machine Learning
 
 Machine learning analysis of neighborhood-level predictors of GLP-1RA prescription patterns across 667 three-digit ZIP code areas in the United States.
 
