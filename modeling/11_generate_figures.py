@@ -56,27 +56,27 @@ PAL = {
     'neu' : '#95A5A6',   # grey (neutral / baseline)
 }
 
-LBL = {                  # human-readable feature labels
+LBL = {                  # human-readable feature labels (IEEE: words, no abbreviations)
     'health_uninsured'          : 'Uninsured Rate',
-    'education_bachelors'       : "Bachelor's Degree %",
+    'education_bachelors'       : "Bachelor's Degree",
     'UrbanCore'                 : 'Urban Core',
     'home_value'                : 'Home Value',
-    'labor_force_participation' : 'Labor Force Part.',
-    'self_employed'             : 'Self-Employed %',
-    'race_native'               : 'Native American %',
-    'veteran'                   : 'Veteran %',
-    'age_over_18'               : 'Adult Population %',
-    'hispanic'                  : 'Hispanic %',
-    'disabled'                  : 'Disabled %',
-    'charitable_givers'         : 'Charitable Givers %',
+    'labor_force_participation' : 'Labor Force Participation',   # CHANGED: was 'Labor Force Part.'
+    'self_employed'             : 'Self-Employed (%)',
+    'race_native'               : 'Native American (%)',
+    'veteran'                   : 'Veteran (%)',
+    'age_over_18'               : 'Adult Population (%)',
+    'hispanic'                  : 'Hispanic (%)',
+    'disabled'                  : 'Disabled (%)',
+    'charitable_givers'         : 'Charitable Givers (%)',
     'rent_burden'               : 'Rent Burden',
-    'education_highschool'      : 'High School %',
+    'education_highschool'      : 'High School (%)',
     'density'                   : 'Population Density',
     'unemployment_rate'         : 'Unemployment Rate',
     'commute_time'              : 'Commute Time',
-    't2d_obesity_pat_count'     : 'T2D/Obesity Count',
-    'farmer'                    : 'Farmer %',
-    'race_black'                : 'Black Population %',
+    't2d_obesity_pat_count'     : 'Type 2 Diabetes/Obesity Count',   # CHANGED: was 'T2D/Obesity Count'
+    'farmer'                    : 'Farmer (%)',
+    'race_black'                : 'Black Population (%)',
 }
 
 # The 20 features the GAM was fit on (order matches gam_partial_effects.csv)
@@ -92,18 +92,20 @@ TOP_FEATURES = [
 EXCLUDE_COLS = {'zip3', 'total_GLP_pat', 'population', 'state_id',
                 'state_name', 'zip5_count', 'lat', 'lng', 'housing_units'}
 
+# IEEE figure label requirements: 8pt Times New Roman
+# 'Liberation Serif' is the standard Linux metric-equivalent of Times New Roman
 plt.rcParams.update({
-    'font.family': 'sans-serif',
-    'font.sans-serif': ['DejaVu Sans'],
-    'axes.spines.top': False,
+    'font.family'      : 'serif',
+    'font.serif'       : ['Times New Roman', 'Liberation Serif', 'DejaVu Serif'],  # CHANGED: fallback chain for Linux clusters
+    'axes.spines.top'  : False,
     'axes.spines.right': False,
-    'axes.labelsize': 9,
-    'xtick.labelsize': 8,
-    'ytick.labelsize': 8,
-    'axes.titlesize': 10,
-    'figure.facecolor': 'white',
-    'axes.facecolor': 'white',
-    'axes.grid': False,
+    'axes.labelsize'   : 8,                      # CHANGED: was 9
+    'xtick.labelsize'  : 8,
+    'ytick.labelsize'  : 8,
+    'axes.titlesize'   : 8,                      # CHANGED: was 10
+    'figure.facecolor' : 'white',
+    'axes.facecolor'   : 'white',
+    'axes.grid'        : False,
 })
 
 # =============================================================================
@@ -187,8 +189,8 @@ fig.suptitle('Figure 1.  Distribution of GLP-1RA Prescribing Rates Across 667 ZI
 ax = axes[0]
 ax.hist(df1['rate'], bins=60, color=PAL['gam'], alpha=0.75,
         edgecolor='white', linewidth=0.4)
-ax.set_xlabel('Prescriptions per 100,000 Population')
-ax.set_ylabel('Number of ZIP-3 Areas')
+ax.set_xlabel('Prescriptions per 100,000 Population')       # unchanged — already compliant
+ax.set_ylabel('Number of ZIP-3 Areas')                      # unchanged — already compliant
 ax.set_title('A.  Raw Prescribing Rate', fontweight='bold', fontsize=9.5)
 med = df1['rate'].median()
 ax.axvline(med, color='#E74C3C', linestyle='--', linewidth=1.2)
@@ -199,7 +201,7 @@ ax.text(med + 1200, ax.get_ylim()[1] * 0.85,
 ax = axes[1]
 ax.hist(df1['log_rate'], bins=45, color=PAL['gam'], alpha=0.75,
         edgecolor='white', linewidth=0.4)
-ax.set_xlabel('Log(Prescriptions per 100,000)')
+ax.set_xlabel('Log-Transformed Prescribing Rate (per 100,000 Population)')  # CHANGED: was 'Log(Prescriptions per 100,000)'
 ax.set_ylabel('Number of ZIP-3 Areas')
 ax.set_title('B.  Log-Transformed Rate\n(Modeling Scale)', fontweight='bold', fontsize=9.5)
 ax.axvline(df1['log_rate'].median(), color='#E74C3C', linestyle='--', linewidth=1.2)
@@ -213,7 +215,7 @@ z  = np.polyfit(uc, lr, 1)
 xg = np.linspace(uc.min(), uc.max(), 100)
 ax.plot(xg, np.polyval(z, xg), color='#E74C3C', linewidth=1.8)
 ax.set_xlabel('Urban Core Fraction')
-ax.set_ylabel('Log(Prescriptions per 100,000)')
+ax.set_ylabel('Log-Transformed Prescribing Rate (per 100,000 Population)')  # CHANGED: was 'Log(Prescriptions per 100,000)'
 ax.set_title(f'C.  Urban Core vs. Prescribing\n(n = {len(df1c)})',
              fontweight='bold', fontsize=9.5)
 r = np.corrcoef(uc, lr)[0, 1]
@@ -230,30 +232,21 @@ print("  figure1_distribution.png")
 # =============================================================================
 print("Generating Figure 2…")
 
-# CV R² values (mean ± SD) read from the summary CSVs produced by steps 8-10.
-# These are the published numbers; we do not re-run cross-validation here.
-# Ridge (68 features):  from gb_model_summary or rf_model_summary
-# GAM:                  from gam_model_summary
-# RF, GB:               from rf_model_summary / gb_model_summary
-
 gb_sum  = pd.read_csv('gb_model_summary.csv').set_index('Metric')['Value']
 rf_sum  = pd.read_csv('rf_model_summary.csv').set_index('Metric')['Value']
 gam_sum = pd.read_csv('gam_model_summary.csv').set_index('Metric')['Value']
 
-# Summary CSVs store mean and std as separate rows; Ridge_CV_R2 is a single
-# value (no per-fold array was saved) so we use the GB std as a proxy for the
-# Ridge error bar (both were evaluated on the same 5 folds).
 means = [
-    float(rf_sum['Ridge_CV_R2']),     # Ridge baseline (68 feat)
-    float(gam_sum['CV_R2_mean']),     # GAM
-    float(rf_sum['CV_R2_mean']),      # RF
-    float(gb_sum['CV_R2_mean']),      # GB
+    float(rf_sum['Ridge_CV_R2']),
+    float(gam_sum['CV_R2_mean']),
+    float(rf_sum['CV_R2_mean']),
+    float(gb_sum['CV_R2_mean']),
 ]
 stds = [
-    float(gb_sum['CV_R2_std']),       # Ridge SD proxy (same fold structure)
-    float(gam_sum['CV_R2_std']),      # GAM
-    float(rf_sum['CV_R2_std']),       # RF
-    float(gb_sum['CV_R2_std']),       # GB
+    float(gb_sum['CV_R2_std']),
+    float(gam_sum['CV_R2_std']),
+    float(rf_sum['CV_R2_std']),
+    float(gb_sum['CV_R2_std']),
 ]
 
 models = ['Linear\nRegression\n(Ridge)',
@@ -285,14 +278,14 @@ ax.text(0.5, yb + 0.015, f'+{pp_gain:.1f} pp\n(nonlinearity)',
 
 ax.set_xticks(x)
 ax.set_xticklabels(models, fontsize=8.5)
-ax.set_ylabel('5-Fold CV R²')
+ax.set_ylabel('5-Fold Cross-Validated R\u00b2')   # CHANGED: was '5-Fold CV R²' (CV is abbreviation)
 ax.set_ylim(0, 0.58)
 ax.axhline(0, color='grey', linewidth=0.5)
 
 ax.text(0.98, 0.04,
-        'Error bars = ±1 SD across folds\n'
+        'Error bars = \u00b11 SD across folds\n'
         'GAM selected as primary model:\n'
-        '  optimal interpretability–accuracy trade-off',
+        '  optimal interpretability\u2013accuracy trade-off',
         transform=ax.transAxes, fontsize=7, ha='right', va='bottom',
         bbox=dict(boxstyle='round,pad=0.35', fc='#F5F5F5', ec='#CCC'))
 
@@ -307,12 +300,12 @@ print("  figure2_model_comparison.png")
 print("Generating Figure 3…")
 
 panel_specs = [
-    ('health_uninsured',          'A.  Health Uninsured Rate',       '% Uninsured'),
-    ('education_bachelors',       "B.  Bachelor's Degree Holders",   "% with Bachelor's+"),
-    ('UrbanCore',                 'C.  Urban Core Fraction',         'Urban Core (proportion)'),
-    ('home_value',                'D.  Median Home Value',           'Home Value'),
-    ('labor_force_participation', 'E.  Labor Force Participation',   '% in Labor Force'),
-    ('race_native',               'F.  Native American Population',  '% Native American'),
+    ('health_uninsured',          'A.  Health Uninsured Rate',       'Health Uninsured Rate (%)'),                        # CHANGED: was '% Uninsured'
+    ('education_bachelors',       "B.  Bachelor's Degree Holders",   "Population with Bachelor's Degree or Higher (%)"),  # CHANGED: was "% with Bachelor's+"
+    ('UrbanCore',                 'C.  Urban Core Fraction',         'Urban Core (Proportion)'),                          # CHANGED: capitalized Proportion
+    ('home_value',                'D.  Median Home Value',           'Median Home Value (USD)'),                          # CHANGED: added (USD)
+    ('labor_force_participation', 'E.  Labor Force Participation',   'Labor Force Participation Rate (%)'),               # CHANGED: was '% in Labor Force'
+    ('race_native',               'F.  Native American Population',  'Native American Population (%)'),                   # CHANGED: was '% Native American'
 ]
 
 fig, axes = plt.subplots(2, 3, figsize=(13, 8.2))
@@ -327,8 +320,8 @@ for pi, (fn, title, xlabel) in enumerate(panel_specs):
     col_idx = feature_cols.index(fn)
     gb_pdp  = partial_dependence(gb, X, features=[col_idx], grid_resolution=50)
     rf_pdp  = partial_dependence(rf, X, features=[col_idx], grid_resolution=50)
-    shared_x = gb_pdp['grid_values'][0]                          # original scale
-    gb_y_c   = gb_pdp['average'][0] - gb_pdp['average'][0].mean()  # centre
+    shared_x = gb_pdp['grid_values'][0]
+    gb_y_c   = gb_pdp['average'][0] - gb_pdp['average'][0].mean()
     rf_y_c   = rf_pdp['average'][0] - rf_pdp['average'][0].mean()
 
     # --- GAM curve: back-transform from X_scaled, interpolate onto shared_x ---
@@ -343,7 +336,7 @@ for pi, (fn, title, xlabel) in enumerate(panel_specs):
     ax.set_title(title, fontweight='bold', fontsize=9)
     ax.set_xlabel(xlabel, fontsize=8)
     if col == 0:
-        ax.set_ylabel('Partial Effect\n(centered)', fontsize=8)
+        ax.set_ylabel('Partial Effect\n(Centered)', fontsize=8)
     if fn == 'home_value':
         ax.xaxis.set_major_formatter(
             plt.FuncFormatter(lambda v, _: f'${v/1000:.0f}K'))
@@ -399,13 +392,13 @@ gb_mm  = minmax(merged['GB']).loc[order]
 ax.barh(ypos + bh,  gam_mm, bh, color=PAL['gam'],
         label='GAM (Effect Range)',    edgecolor='white', linewidth=0.5)
 ax.barh(ypos,       rf_mm,  bh, color=PAL['rf'],
-        label='RF (Perm. Importance)', edgecolor='white', linewidth=0.5)
+        label='RF (Permutation Importance)', edgecolor='white', linewidth=0.5)   # CHANGED: was 'Perm. Importance'
 ax.barh(ypos - bh,  gb_mm,  bh, color=PAL['gb'],
-        label='GB (Perm. Importance)', edgecolor='white', linewidth=0.5)
+        label='GB (Permutation Importance)', edgecolor='white', linewidth=0.5)   # CHANGED: was 'Perm. Importance'
 
 ax.set_yticks(ypos)
 ax.set_yticklabels(labels, fontsize=8)
-ax.set_xlabel('Normalized Importance (0–1 per method)', fontsize=8.5)
+ax.set_xlabel('Normalized Importance (0 to 1 per Method)', fontsize=8.5)        # CHANGED: was '(0–1 per method)'
 ax.set_title('Importance Rankings by Method', fontweight='bold', fontsize=9.5)
 ax.legend(loc='lower right', fontsize=7.5, frameon=True, edgecolor='#CCC')
 ax.set_xlim(0, 1.15)
@@ -442,9 +435,9 @@ rho_gam_gb, _ = spearmanr(ranks['GAM'], ranks['GB'])
 rho_rf_gb,  _ = spearmanr(ranks['RF'],  ranks['GB'])
 fig.text(0.5, -0.02,
          f'Spearman rank correlations:  '
-         f'GAM–RF ρ = {rho_gam_rf:.2f}   '
-         f'GAM–GB ρ = {rho_gam_gb:.2f}   '
-         f'RF–GB ρ = {rho_rf_gb:.2f}   (all P < 0.05)',
+         f'GAM\u2013RF \u03c1 = {rho_gam_rf:.2f}   '
+         f'GAM\u2013GB \u03c1 = {rho_gam_gb:.2f}   '
+         f'RF\u2013GB \u03c1 = {rho_rf_gb:.2f}   (all P < 0.05)',
          ha='center', fontsize=8, style='italic', color='#555')
 
 plt.tight_layout()
@@ -457,19 +450,17 @@ print("  figure4_cross_method_importance.png")
 # =============================================================================
 print("Generating Figure 5…")
 
-# Top row: strongest nonlinear effects.  Bottom row: approximately linear.
-# The contrast is the figure's argument for why GAM beats Ridge.
 nonlin_feats = ['health_uninsured', 'education_bachelors', 'UrbanCore']
 linear_feats = ['density', 'unemployment_rate', 't2d_obesity_pat_count']
 all6 = nonlin_feats + linear_feats
 
 XLABEL5 = {
-    'health_uninsured'      : 'Uninsured Rate (%)',
-    'education_bachelors'   : "Bachelor's Degree (%)",
-    'UrbanCore'             : 'Urban Core (proportion)',
-    'density'               : 'Population Density',
+    'health_uninsured'      : 'Health Uninsured Rate (%)',                   # CHANGED: was 'Uninsured Rate (%)'
+    'education_bachelors'   : "Population with Bachelor's Degree (%)",       # CHANGED: was "Bachelor's Degree (%)"
+    'UrbanCore'             : 'Urban Core (Proportion)',                      # CHANGED: capitalized Proportion
+    'density'               : 'Population Density (persons per square mile)', # CHANGED: added units
     'unemployment_rate'     : 'Unemployment Rate (%)',
-    't2d_obesity_pat_count' : 'T2D/Obesity Patient Count',
+    't2d_obesity_pat_count' : 'Type 2 Diabetes and Obesity Patient Count',   # CHANGED: was 'T2D/Obesity Patient Count'
 }
 
 # Read nonlinearity flags from gam_feature_importance.csv
@@ -499,15 +490,15 @@ for idx, fn in enumerate(all6):
     lin = np.polyfit(x_orig, y_eff, 1)
     ax.plot(x_orig, np.polyval(lin, x_orig),
             color='grey', linewidth=1.2, linestyle='--', alpha=0.7,
-            label='Linear fit')
+            label='Linear Fit')                                   # CHANGED: was 'Linear fit'
     ax.axhline(0, color='grey', linewidth=0.5, linestyle=':')
 
     ax.set_xlabel(XLABEL5.get(fn, fn), fontsize=8)
     if col == 0:
-        ax.set_ylabel('Partial Effect (centered)', fontsize=8)
+        ax.set_ylabel('Partial Effect (Centered)', fontsize=8)    # CHANGED: capitalized Centered
 
     # Badge
-    badge    = '[Nonlinear]' if is_nl else '[≈ Linear]'
+    badge    = '[Nonlinear]' if is_nl else '[Approximately Linear]'   # CHANGED: was '[≈ Linear]'
     badge_fc = '#E74C3C'     if is_nl else '#27AE60'
     ax.set_title(fn.replace('_', ' ').title(), fontweight='bold', fontsize=9)
     ax.text(0.98, 0.95, badge, transform=ax.transAxes, fontsize=7,
@@ -515,9 +506,9 @@ for idx, fn in enumerate(all6):
             bbox=dict(boxstyle='round,pad=0.2', fc=badge_fc, ec='none'))
 
 # Row labels that double as section headers
-axes[0, 0].set_ylabel('Partial Effect (centered)\n— Nonlinear —',
+axes[0, 0].set_ylabel('Partial Effect (Centered)\n— Nonlinear —',
                        fontsize=8, color=PAL['neg'])
-axes[1, 0].set_ylabel('Partial Effect (centered)\n— ≈ Linear —',
+axes[1, 0].set_ylabel('Partial Effect (Centered)\n— Approximately Linear —',  # CHANGED: was '— ≈ Linear —'
                        fontsize=8, color='#27AE60')
 axes[0, 0].legend(loc='lower left', fontsize=7, frameon=True, edgecolor='#CCC')
 
