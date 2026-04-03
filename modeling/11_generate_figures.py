@@ -182,8 +182,6 @@ df1c['log_rate'] = np.log((df1c['total_GLP_pat'] + 0.5) / df1c['population'])
 
 fig, axes = plt.subplots(1, 3, figsize=(13, 3.8),
                          gridspec_kw={'width_ratios': [1.1, 1, 1]})
-fig.suptitle('Figure 1.  Distribution of GLP-1RA Prescribing Rates Across 667 ZIP-3 Areas',
-             fontsize=11, fontweight='bold', y=1.02)
 
 # --- A: raw rate histogram ---
 ax = axes[0]
@@ -256,8 +254,6 @@ models = ['Linear\nRegression\n(Ridge)',
 colors = [PAL['neu'], PAL['gam'], PAL['rf'], PAL['gb']]
 
 fig, ax = plt.subplots(figsize=(7, 4))
-fig.suptitle('Figure 2.  Cross-Validated Predictive Performance (5-Fold CV R²)',
-             fontsize=11, fontweight='bold', y=1.02)
 
 x = np.arange(len(models))
 ax.bar(x, means, yerr=stds, capsize=5, color=colors, edgecolor='white',
@@ -309,8 +305,6 @@ panel_specs = [
 ]
 
 fig, axes = plt.subplots(2, 3, figsize=(13, 8.2))
-fig.suptitle('Figure 3.  Partial Dependence Plots: Top Predictors Across Three Methods',
-             fontsize=12, fontweight='bold', y=1.01)
 
 for pi, (fn, title, xlabel) in enumerate(panel_specs):
     row, col = divmod(pi, 3)
@@ -376,8 +370,6 @@ labels    = [LBL.get(f, f) for f in order]
 
 fig, axes = plt.subplots(1, 2, figsize=(13, 7.2),
                          gridspec_kw={'width_ratios': [1.3, 0.7]})
-fig.suptitle('Figure 4.  Cross-Method Feature Importance Comparison',
-             fontsize=12, fontweight='bold', y=1.01)
 
 # --- LEFT: grouped horizontal bars ---
 ax   = axes[0]
@@ -437,7 +429,7 @@ fig.text(0.5, -0.02,
          f'Spearman rank correlations:  '
          f'GAM\u2013RF \u03c1 = {rho_gam_rf:.2f}   '
          f'GAM\u2013GB \u03c1 = {rho_gam_gb:.2f}   '
-         f'RF\u2013GB \u03c1 = {rho_rf_gb:.2f}   (all P < 0.05)',
+         f'RF\u2013GB \u03c1 = {rho_rf_gb:.2f}   (all p < 0.05)',
          ha='center', fontsize=8, style='italic', color='#555')
 
 plt.tight_layout()
@@ -467,8 +459,6 @@ XLABEL5 = {
 nl_flags = gam_imp.set_index('Feature')
 
 fig, axes = plt.subplots(2, 3, figsize=(13, 7.5))
-fig.suptitle('Figure 5.  GAM Smooth Functions: Nonlinear vs. Approximately Linear Effects',
-             fontsize=12, fontweight='bold', y=1.01)
 
 for idx, fn in enumerate(all6):
     row, col = divmod(idx, 3)
